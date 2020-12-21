@@ -1,0 +1,49 @@
+<IfModule mod_rewrite.c>
+ RewriteEngine On
+ # !IMPORTANT! Set your RewriteBase here and don't forget trailing and leading
+ #  slashes.
+ # If your page resides at
+ #  http://www.example.com/mypage/test1
+ # then use
+ # RewriteBase /
+ # RewriteBase /
+ # NC makes the rule non case sensitive
+ # L makes this the last rule that this secific condition will match 
+
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteRule ^(.*)$ index.php/$1 [L]
+
+ #this rule handles the subdomains
+ #RewriteCond %{HTTP_HOST} ^m
+ #RewriteRule ^(.*)$ index.php?/mobile [L]
+ # Subdomains to Folders + Enforce www
+ #RewriteCond %{HTTP_HOST} ^(m) [NC]
+ #RewriteRule ^(.*)$ $1/index.php/mobile [L]
+ #RewriteCond %{HTTP_HOST} ^(m) [NC]
+ #RewriteRule ^(.*) http://doolally.io/mobile [P]
+ #RewriteCond %{HTTP_HOST} ^(m) [NC]
+ #RewriteRule ^(.*)$ http://doolally.io/mobile [L,R=301]
+
+</IfModule>
+## EXPIRES CACHING ##
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType image/jpg "access 1 year"
+ExpiresByType image/jpeg "access 1 year"
+ExpiresByType image/gif "access 1 year"
+ExpiresByType image/png "access 1 year"
+ExpiresByType text/css "access 1 month"
+ExpiresByType application/pdf "access 1 month"
+ExpiresByType application/javascript "access 1 month"
+ExpiresByType application/x-javascript "access 1 month"
+ExpiresByType application/x-shockwave-flash "access 1 month"
+ExpiresByType image/x-icon "access 1 year"
+ExpiresDefault "access 2 days"
+</IfModule>
+## EXPIRES CACHING ##
+
+<LIMIT PUT DELETE OPTIONS PATCH>
+order allow,deny
+allow from all
+</LIMIT>
