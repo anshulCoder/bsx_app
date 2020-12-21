@@ -33,6 +33,8 @@ $routes->setAutoRoute(true);
 $routes->get('/', 'Home::index');
 $routes->get('/admin', 'Admin::index');
 $routes->get('/user', 'User::index');
+$routes->get('/user/new-accuracy-bet', 'User::add_accuracy_bet');
+$routes->get('/user/new-battle-bet', 'User::add_battle_bet');
 $routes->get('/user/login', 'User::login');
 /**
  * --------------------------------------------------------------------

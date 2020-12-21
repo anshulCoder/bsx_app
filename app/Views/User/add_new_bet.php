@@ -10,7 +10,7 @@
 		<main class="container">
 
 		  <div class="py-5 px-3">
-		  	<form action="/user/save_new_bet" id="save-media-form" method="post" class="form-horizontal" role="form">
+		  	<form action="/user/save_accuracy_bet" id="save-media-form" method="post" class="form-horizontal" role="form">
 		  	  <div class="mb-3">
 			    <label for="media_name" class="form-label">Select Movie/TV</label>
 			    <!-- select code -->
@@ -45,7 +45,8 @@
 			    <label for="bet_date" class="form-label">Bet Date</label>
 			    <input type="text" class="form-control" name="bet_date" id="bet_date" required>
 			  </div>
-			  <input type="hidden" name="user_id" value="1"/>
+			  <?php $session = \Config\Services::session(); ?>
+			  <input type="hidden" name="user_id" value="<?= $session->get('user_id'); ?>"/>
 			  <button type="submit" class="btn btn-primary">Submit</button>
 			</form>
 		  </div>

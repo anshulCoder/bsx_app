@@ -8,33 +8,80 @@
 		<main class="container">
 
 		  <div class="text-center py-5 px-3">
-		  	<a href="user/add" type="button" class="btn btn-success">Add new Bet</a>
-		    <table class="table table-responsive table-striped">
-		    	<thead>
-		    		<tr>
-		    			<th>Media Name</th>
-		    			<th>Bet amount</th>
-		    			<th>Predicted amount</th>
-		    			<th>Bet Date</th>
-		    			<th>Actions</th>
-		    		</tr>
-		    	</thead>
-		    	<tbody>
-		    		<?php
-		    			foreach($bets as $key => $row) {
-		    				?>
-		    				<tr>
-		    					<td><?= $row['name']; ?></td>
-		    					<td><?= $row['betting_amount']; ?></td>
-		    					<td><?= $row['predicted_amount']; ?></td>
-		    					<td><?= $row['betting_date']; ?></td>
-		    					<td><a href="#" class="predict_accuracy" title="Predict Accuracy" data-bet-id="<?= $row['bet_id'];?>"><i class="fas fa-percentage"></i></a></td>
-		    				</tr>
-		    				<?php
-		    			}
-		    		?>
-		    	</tbody>
-		    </table>
+		  	<ul class="nav nav-tabs" id="exchange-tabs" role="tablist">
+			  <li class="nav-item" role="presentation">
+			    <a class="nav-link active" id="accuracy-tab" data-bs-toggle="tab" href="#accuracy" role="tab" aria-controls="accuracy" aria-selected="true">Bet Accuracy</a>
+			  </li>
+			  <li class="nav-item" role="presentation">
+			    <a class="nav-link" id="battle-tab" data-bs-toggle="tab" href="#battle" role="tab" aria-controls="battle" aria-selected="false">Bet Battle</a>
+			  </li>
+			</ul>
+			<div class="tab-content" id="myTabContent">
+			  <div class="tab-pane fade show active" id="accuracy" role="tabpanel" aria-labelledby="accuracy-tab">
+			  	<br>
+			  	<a href="/user/new-accuracy-bet" type="button" class="btn btn-success">Add new Bet</a>
+			    <table class="table table-responsive table-striped">
+			    	<thead>
+			    		<tr>
+			    			<th>Media Name</th>
+			    			<th>Bet amount</th>
+			    			<th>Predicted amount</th>
+			    			<th>Bet Date</th>
+			    			<th>Actions</th>
+			    		</tr>
+			    	</thead>
+			    	<tbody>
+			    		<?php
+			    			foreach($bets as $key => $row) {
+			    				?>
+			    				<tr>
+			    					<td><?= $row['name']; ?></td>
+			    					<td><?= $row['betting_amount']; ?></td>
+			    					<td><?= $row['predicted_amount']; ?></td>
+			    					<td><?= $row['betting_date']; ?></td>
+			    					<td><a href="#" class="predict_accuracy" title="Predict Accuracy" data-bet-id="<?= $row['bet_id'];?>"><i class="fas fa-percentage"></i></a></td>
+			    				</tr>
+			    				<?php
+			    			}
+			    		?>
+			    	</tbody>
+			    </table>
+			  </div>
+			  <div class="tab-pane fade" id="battle" role="tabpanel" aria-labelledby="battle-tab">
+			  	<br>
+			  	<a href="/user/new-battle-bet" type="button" class="btn btn-success">Add new Bet</a>
+			    <table class="table table-responsive table-striped">
+			    	<thead>
+			    		<tr>
+			    			<th>Media Name</th>
+			    			<th>Bet amount</th>
+			    			<th>Bet description</th>
+			    			<th>Bet started with</th>
+			    			<th>Public/Private</th>
+			    			<th>Bet End Date</th>
+			    			<th>Actions</th>
+			    		</tr>
+			    	</thead>
+			    	<tbody>
+			    		<?php
+			    			foreach($bet_battles as $key => $row) {
+			    				?>
+			    				<tr>
+			    					<td><?= $row['name']; ?></td>
+			    					<td><?= $row['battle_amount']; ?></td>
+			    					<td><?= $row['battle_description']; ?></td>
+			    					<td><?= $row['battle_with']; ?></td>
+			    					<td><?= $row['battle_mode']; ?></td>
+			    					<td><?= $row['battle_end_date']; ?></td>
+			    					<td><a href="#" class="btn btn-primary disabled" data-battle-id="<?= $row['battle_id'];?>"disabled>Claim Battle</a></td>
+			    				</tr>
+			    				<?php
+			    			}
+			    		?>
+			    	</tbody>
+			    </table>
+			  </div>
+			</div>
 		  </div>
 
 		</main><!-- /.container -->
