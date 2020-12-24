@@ -2,16 +2,16 @@
 
 use CodeIgniter\Model;
 
-class UserModel extends Model
+class BattleResultsModel extends Model
 {
 	protected $DBGroup = 'default';
-	protected $table      = 'user';
-    protected $primaryKey = 'id';
+	protected $table      = 'battle_results';
+    protected $primaryKey = 'battle_result_id';
 
     protected $returnType     = 'array';
     protected $useSoftDeletes = false;
 
-    protected $allowedFields = ['name', 'username', 'email', 'password', 'wallet_balance', 'if_active'];
+    protected $allowedFields = ['battle_result_id','battle_id', 'winner_player_id', 'loser_player_id','win_amount', 'win_amount_additionals'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_datetime';

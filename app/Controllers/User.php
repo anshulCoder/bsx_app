@@ -27,9 +27,12 @@ class User extends BaseController
 		$data = array();
 		$mediaBetModel = model('App\Models\MediaBetModel', false);
 		$betBattleModel = model('App\Models\BetBattleModel', false);
-		$data['bets'] = $mediaBetModel->get_media_bets();
-		$data['bet_battles'] = $betBattleModel->where('player1_id', $this->session->get('user_id'))
-								->findAll();
+		$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
+		$user_id = $this->session->get('user_id');
+		$data['bets'] = $mediaBetModel->get_media_bets($user_id);
+		$data['battles'] = $betBattleModel->get_battles_by_user($user_id);
+		$data['public_battles'] = $additionalBetsModel->fetch_public_battles($user_id);
+		$data['requested_battles'] = $betBattleModel->get_requested_battles($user_id);
 		$data['header'] = view('common/Header');
 		echo view('common/commoncss');
 		echo view('common/commonjs');
@@ -123,7 +126,8 @@ class User extends BaseController
 				$sess_data = array(
 					'user_id' => $user['id'],
 					'user_name' => $user['username'],
-					'user_email' => $user['email']
+					'user_email' => $user['email'],
+					'user_wallet_balance' => $user['wallet_balance']
 				);
 				$this->session->set($sess_data);
 				return redirect()->to('/user');
@@ -162,17 +166,157 @@ class User extends BaseController
 	{
 		helper(['form', 'url']);
 
-		$this->validation->withRequest($this->request)
-           ->run();
-		if (! $this->validate([]))
+		$input = $this->validate([
+			'player2_id' => 'required',
+			'battle_description' => 'required',
+			'battle_amount' => 'required|numeric',
+			'battle_mode' => 'required',
+			'media_selected_id' => 'required',
+			'battle_end_date' => 'required'
+		]);
+  
+		if (!$input)
         {
-            echo view('Signup', [
-                'validation' => $this->validator
-            ]);
+            return redirect()->to('/user/new-battle-bet');
         }
         else
         {
-            echo view('Success');
+        	$betBattleModel = model('App\Models\BetBattleModel', false);
+        	$battle_details = array(
+        		'player1_id' => $this->session->get('user_id'),
+        		'player2_id' => $this->request->getVar('player2_id'),
+        		'player1_battle_description' => $this->request->getVar('battle_description'),
+				'battle_amount' => $this->request->getVar('battle_amount'),
+				'battle_mode' => $this->request->getVar('battle_mode'),
+				'media_selected_id' => $this->request->getVar('media_selected_id'),
+				'battle_end_date' => $this->request->getVar('battle_end_date'),
+				'battle_status' => 0
+        	);
+        	$betBattleModel->insert($battle_details);
+            return redirect()->to('/user');
         }
+	}
+
+	public function accept_battle($battle_id)
+	{
+		if(empty($battle_id))
+		{
+			return redirect()->to('/user');
+		}
+
+		$betBattleModel = model('App\Models\BetBattleModel', false);
+		$data = array(
+			'battle_status' => BATTLE_LIVE
+		);
+		$betBattleModel->update($battle_id, $data);
+		return redirect()->to('/user');
+	}
+
+	public function deny_battle($battle_id)
+	{
+		if(empty($battle_id))
+		{
+			return redirect()->to('/user');
+		}
+
+		$betBattleModel = model('App\Models\BetBattleModel', false);
+		$data = array(
+			'battle_status' => BATTLE_REJECTED
+		);
+		$betBattleModel->update($battle_id, $data);
+		return redirect()->to('/user');
+	}
+
+	public function player2_battle_approval()
+	{
+		$battle_id = $this->request->getVar('bet_battle_id');
+		$battle_description = $this->request->getVar('battle_description');
+
+		if (!empty($battle_id) && !empty($battle_description))
+		{
+			$betBattleModel = model('App\Models\BetBattleModel', false);
+			$data = array(
+				'battle_status' => BATTLE_PENDING_PLAYER1,
+				'player2_battle_description' => $battle_description
+			);
+			$betBattleModel->update($battle_id, $data);
+			return redirect()->to('/user');
+		}
+		else
+		{
+			return redirect()->to('/user');
+		}
+	}
+
+	public function claim_battle()
+	{
+		$battle_id = $this->request->getVar('battle_id');
+		$data = array();
+
+		if(empty($battle_id))
+		{
+			$data['error'] = 'Battle ID is required!';
+			$data['status'] = false;
+		}
+		else
+		{
+			$betBattleModel = model('App\Models\BetBattleModel', false);
+			$userModel = model('App\Models\UserModel', false);
+			$battleResultsModel = model('App\Models\BattleResultsModel', false);
+			$claimed_user_id = $this->session->get('user_id');
+			$battle_info = $betBattleModel->find($battle_id);
+			if(empty($battle_info))
+			{
+				$data['error'] = 'Battle Data not found!';
+				$data['status'] = false;
+			}
+			else
+			{
+				$current_wallet_balance = $this->session->get('user_wallet_balance');
+				// Claim for private battle
+				if($battle_info['battle_mode'] == 'private')
+				{	
+					//winner update
+					$updated_balance = (double)$current_wallet_balance + (double)$battle_info['battle_amount'];
+					$user_update = array(
+						'wallet_balance' => $updated_balance
+					);
+					$userModel->update($claimed_user_id, $user_update);
+					$this->session->set('user_wallet_balance', $updated_balance);
+
+					//loser update
+					$lost_user_id = ($battle_info['player1_id'] == $claimed_user_id ? $battle_info['player2_id'] : $battle_info['player1_id']);
+					$lost_user_info = $userModel->find($lost_user_id);
+					$user_update = array(
+						'wallet_balance' => (double)$lost_user_info['wallet_balance'] - (double)$battle_info['battle_amount']
+					);
+					
+					$userModel->update($lost_user_id, $user_update);
+
+					//saving result
+					$battle_result = array(
+						'battle_id' => $battle_id,
+						'winner_player_id' => $claimed_user_id,
+						'loser_player_id' => $lost_user_id,
+						'win_amount' => $updated_balance
+					);
+					$battleResultsModel->insert($battle_result);
+
+					$battle_update_data = array(
+						'battle_status' => BATTLE_FINISHED
+					);
+					$betBattleModel->update($battle_id, $battle_update_data);
+				}
+				else //public claim
+				{
+
+				}
+
+
+				$data['status'] = true;
+			}
+		}
+
+		echo json_encode($data);
 	}
 }

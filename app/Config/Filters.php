@@ -18,6 +18,7 @@ class Filters extends BaseConfig
 		'before' => [
 			//'honeypot'
 			// 'csrf',
+			'UserLoginFilter' => ['except' => ['/', '/user/login', '/user/check_user_login', '/admin', '/admin/*']]
 		],
 		'after'  => [
 			'toolbar',
@@ -33,7 +34,5 @@ class Filters extends BaseConfig
 	// List filter aliases and any before/after uri patterns
 	// that they should run on, like:
 	//    'isLoggedIn' => ['before' => ['account/*', 'profiles/*']],
-	public $filters = [
-		'UserLoginFilter' => ['before' => ['User']]
-	];
+	public $filters = [];
 }

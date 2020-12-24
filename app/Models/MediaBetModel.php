@@ -22,11 +22,12 @@ class MediaBetModel extends Model
     protected $validationMessages = [];
     protected $skipValidation     = false;
 
-    public function get_media_bets()
+    public function get_media_bets($user_id)
     {
         $builder = $this->db->table('media_bet');
         $query = $builder->select('media.name, bet_id, betting_amount, predicted_amount, betting_date')
-                        ->join('media','media.id = media_bet.media_id')->get();
+                        ->join('media','media.id = media_bet.media_id')
+                        ->where('media_bet.user_id', $user_id)->get();
         return $query->getResultArray();
     }
 }

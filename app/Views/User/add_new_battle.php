@@ -8,8 +8,8 @@
 		<?= $header; ?>
 
 		<main class="container">
-
-			<?= $validation->listErrors() ?>
+		  <?php $validation = \Config\Services::validation();?>
+		  <?= $validation->listErrors() ?>
 		  <div class="py-5 px-3">
 		  	<form action="/user/save_battle_bet" id="save-battle-form" method="post" class="form-horizontal" role="form">
 		  	  <div class="mb-3">

@@ -36,6 +36,8 @@ $routes->get('/user', 'User::index');
 $routes->get('/user/new-accuracy-bet', 'User::add_accuracy_bet');
 $routes->get('/user/new-battle-bet', 'User::add_battle_bet');
 $routes->get('/user/login', 'User::login');
+$routes->get('/user/accept-battle/(:num)', 'User::accept_battle/$1');
+$routes->get('/user/deny-battle/(:num)', 'User::deny_battle/$1');
 /**
  * --------------------------------------------------------------------
  * Additional Routing

@@ -32,5 +32,13 @@
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
+    <?php
+    	if(!empty($session->get('user_id')))
+    	{
+    		?>
+    		<span class="text-white">Welcome <?= $session->get('user_name'); ?>, Wallet: <?= $session->get('user_wallet_balance');?></span>
+    		<?php
+    	}
+    ?>
   </div>
 </nav>
