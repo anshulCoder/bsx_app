@@ -22,4 +22,12 @@ class UserModel extends Model
     protected $validationMessages = [];
     protected $skipValidation     = false;
 
+    public function update_wallet_balance($user_id, $balance)
+    {
+        $builder = $this->db->table('user');
+        $query = $builder->where('id', $user_id)
+                         ->set('wallet_balance', '`wallet_balance`'.$balance, FALSE)
+                         ->update();
+        return true;
+    }
 }

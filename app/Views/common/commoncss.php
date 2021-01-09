@@ -1,5 +1,5 @@
 <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
-
+<link href="/assets/css/general.css" rel="stylesheet">
 <style>
   .bd-placeholder-img {
     font-size: 1.125rem;

@@ -62,7 +62,7 @@
 			  </div>
 			  <div class="mb-3">
 			    <label for="battle_amount" class="form-label">Bet Amount</label>
-			    <input type="number" class="form-control" name="battle_amount" id="battle_amount" required>
+			    <input type="number" min="0" class="form-control" name="battle_amount" id="battle_amount" required>
 			  </div>
 			  <div class="mb-3">
 			    <label for="battle_mode" class="form-label">Battle Type:</label>
@@ -70,6 +70,10 @@
 			    	<option value="private">Private</option>
 			    	<option value="public">Public</option>
 			    </select>
+			  </div>
+			  <div class="mb-3 additiona-bet-wrapper d-none">
+			  	<label for="additional_bet_amount" class="form-label">Fixed amount for additional Bets:</label>
+			  	<input type="number" min="0" name="additional_bet_amount" id="additional_bet_amount" class="form-control"/>
 			  </div>
 			  <div class="mb-3">
 			    <label for="battle_end_date" class="form-label">Bet Date</label>
@@ -106,5 +110,19 @@
 				$('#battle_end_date').attr('disabled', 'disabled');
 			}
 		}
+
+		$(document).on('change', '#battle_mode', function() {
+			let mode = $(this).val();
+			if(mode == 'public')
+			{
+				$('.additiona-bet-wrapper').removeClass('d-none');
+				$('#additional_bet_amount').attr('required', 'required');
+			}
+			else
+			{
+				$('.additiona-bet-wrapper').addClass('d-none');
+				$('#additional_bet_amount').removeAttr('required');
+			}
+		});
 	</script>
 </html>

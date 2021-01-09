@@ -19,7 +19,7 @@
 	    		else
 	    		{
 	    			?>
-	    			<a class="nav-link" href="user/logout">Logout</a>
+	    			<a class="nav-link" href="/user/logout">Logout</a>
 	    			<?php
 	    		}
 	    	?>

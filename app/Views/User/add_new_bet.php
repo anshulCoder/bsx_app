@@ -35,11 +35,11 @@
 			  </div>
 			  <div class="mb-3">
 			    <label for="bet_amount" class="form-label">Bet Amount</label>
-			    <input type="number" class="form-control" name="bet_amount" id="bet_amount" required>
+			    <input type="number" min="0" class="form-control" name="bet_amount" id="bet_amount" required>
 			  </div>
 			  <div class="mb-3">
 			    <label for="predicted_amount" class="form-label">Predicted Amount</label>
-			    <input type="number" class="form-control" name="predicted_amount" id="predicted_amount" required>
+			    <input type="number" min="0" class="form-control" name="predicted_amount" id="predicted_amount" required>
 			  </div>
 			  <div class="mb-3">
 			    <label for="bet_date" class="form-label">Bet Date</label>
