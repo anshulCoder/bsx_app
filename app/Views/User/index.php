@@ -111,6 +111,9 @@
 								  <li class="nav-item" role="presentation">
 								    <a class="nav-link" id="battle-tab" data-bs-toggle="tab" href="#battle" role="tab" aria-controls="battle" aria-selected="false">Bet Battle</a>
 								  </li>
+								  <li class="nav-item" role="presentation">
+								    <a class="nav-link" id="sequel-tab" data-bs-toggle="tab" href="#sequel" role="tab" aria-controls="sequel" aria-selected="false">Sequel Bet</a>
+								  </li>
 								</ul>
 								<div class="tab-content" id="myTabContent">
 								  <div class="tab-pane fade show active" id="accuracy" role="tabpanel" aria-labelledby="accuracy-tab">
@@ -386,6 +389,42 @@
 								    </table>
 									  </div>
 									</div>
+								  </div>
+								  <div class="tab-pane fade" id="sequel" role="tabpanel" aria-labelledby="sequel-tab">
+								  	<br>
+								  	<a href="/user/new-sequel-bet" type="button" class="btn btn-success">Add new Bet</a>
+								    <table class="table table-responsive table-striped">
+								    	<thead>
+								    		<tr>
+								    			<th>Media Name</th>
+								    			<th>Bet amount</th>
+								    			<th>Predicted day</th>
+								    			<th>Predicted month</th>
+								    			<th>Predicted year</th>
+								    			<th>Predicted Actors</th>
+								    			<th>Predicted Actresses</th>
+								    			<th>Predicted Directors</th>
+								    		</tr>
+								    	</thead>
+								    	<tbody>
+								    		<?php
+								    			foreach($sequel_bets as $key => $row) {
+								    				?>
+								    				<tr>
+								    					<td><?= $row['name']; ?></td>
+								    					<td><?= $row['sequel_bet_amount']; ?></td>
+								    					<td><?= $row['sequel_bet_day']; ?></td>
+								    					<td><?= $row['sequel_bet_month']; ?></td>
+								    					<td><?= $row['sequel_bet_year']; ?></td>
+								    					<td><?= $row['sequel_bet_actors']; ?></td>
+								    					<td><?= $row['sequel_bet_actresses']; ?></td>
+								    					<td><?= $row['sequel_bet_directors']; ?></td>
+								    				</tr>
+								    				<?php
+								    			}
+								    		?>
+								    	</tbody>
+								    </table>
 								  </div>
 								</div>
 							</div>

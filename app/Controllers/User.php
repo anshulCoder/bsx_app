@@ -28,6 +28,7 @@ class User extends BaseController
 		$mediaBetModel = model('App\Models\MediaBetModel', false);
 		$betBattleModel = model('App\Models\BetBattleModel', false);
 		$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
+		$sequelBetModel = model('App\Models\SequelBetsModel', false);
 		$user_id = $this->session->get('user_id');
 		$data['bets'] = $mediaBetModel->get_media_bets($user_id);
 		$battles = $betBattleModel->get_battles_by_user($user_id);
@@ -46,6 +47,7 @@ class User extends BaseController
 		$data['participated_battles'] = $additionalBetsModel->fetch_participated_battles($user_id);
 		$data['requested_battles'] = $betBattleModel->get_requested_battles($user_id);
 		$data['open_public_battles'] = $betBattleModel->get_public_battles($user_id);
+		$data['sequel_bets'] = $sequelBetModel->get_sequel_bets($user_id);
 		$data['header'] = view('common/Header');
 		echo view('common/commoncss');
 		echo view('common/commonjs');
@@ -385,5 +387,18 @@ class User extends BaseController
 			$this->session->set('user_wallet_balance', (double)$current_wallet_session - (double)$this->request->getVar('bet_amount'));
 			return redirect()->to('/user');
 		}
+	}
+
+	public function add_sequel_bet()
+	{
+		$data = array();
+
+		//fetching all medias available
+		$mediaModel = model('App\Models\MediaModel', false);
+		$data['medias'] = $mediaModel->where('active', 1)->findAll();
+		$data['header'] = view('common/Header');
+		echo view('common/commoncss');
+		echo view('common/commonjs');
+		echo view('User/add_new_sequel_bet', $data);
 	}
 }
