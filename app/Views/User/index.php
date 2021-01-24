@@ -114,6 +114,9 @@
 								  <li class="nav-item" role="presentation">
 								    <a class="nav-link" id="sequel-tab" data-bs-toggle="tab" href="#sequel" role="tab" aria-controls="sequel" aria-selected="false">Sequel Bet</a>
 								  </li>
+								  <li class="nav-item" role="presentation">
+								    <a class="nav-link" id="exchange-tab" data-bs-toggle="tab" href="#exchange" role="tab" aria-controls="exchange" aria-selected="false">Bet Exchange</a>
+								  </li>
 								</ul>
 								<div class="tab-content" id="myTabContent">
 								  <div class="tab-pane fade show active" id="accuracy" role="tabpanel" aria-labelledby="accuracy-tab">
@@ -416,9 +419,86 @@
 								    					<td><?= $row['sequel_bet_day']; ?></td>
 								    					<td><?= $row['sequel_bet_month']; ?></td>
 								    					<td><?= $row['sequel_bet_year']; ?></td>
-								    					<td><?= $row['sequel_bet_actors']; ?></td>
-								    					<td><?= $row['sequel_bet_actresses']; ?></td>
-								    					<td><?= $row['sequel_bet_directors']; ?></td>
+								    					<td>
+								    						<?php
+								    							$actors = json_decode($row['sequel_bet_actors'], TRUE);
+								    							if(count($actors)>0)
+								    							{
+								    								echo '<ul>';
+								    								foreach($actors as $key)
+								    								{
+								    									if($key != 'NA') echo '<li>'.$key.'</li>';
+								    								}
+								    								echo '</ul>';
+								    							}
+
+								    						?>
+								    					</td>
+								    					<td>
+								    						<?php
+								    							$actresses = json_decode($row['sequel_bet_actresses'], TRUE);
+								    							if(count($actresses)>0)
+								    							{
+								    								echo '<ul>';
+								    								foreach($actresses as $key)
+								    								{
+								    									if($key != 'NA') echo '<li>'.$key.'</li>';
+								    								}
+								    								echo '</ul>';
+								    							}
+
+								    						?>
+								    					</td>
+								    					<td>
+								    						<?php
+								    							$directors = json_decode($row['sequel_bet_directors'], TRUE);
+								    							if(count($directors)>0)
+								    							{
+								    								echo '<ul>';
+								    								foreach($directors as $key)
+								    								{
+								    									if($key != 'NA') echo '<li>'.$key.'</li>';
+								    								}
+								    								echo '</ul>';
+								    							}
+
+								    						?>
+								    					</td>
+								    				</tr>
+								    				<?php
+								    			}
+								    		?>
+								    	</tbody>
+								    </table>
+								  </div>
+
+								  <div class="tab-pane fade" id="exchange" role="tabpanel" aria-labelledby="exchange-tab">
+								  	<br>
+								  	<a href="/user/new-exchange-bet" type="button" class="btn btn-success">Add new Bet</a>
+								    <table class="table table-responsive table-striped">
+								    	<thead>
+								    		<tr>
+								    			<th>Media Name</th>
+								    			<th>Bet Slip amount</th>
+								    			<th>Bet Slip Type</th>
+								    			<th>Exchange Type</th>
+								    			<th>Slip selling price</th>
+								    			<th>Status</th>
+								    			<th>Created Date/Time</th>
+								    		</tr>
+								    	</thead>
+								    	<tbody>
+								    		<?php
+								    			foreach($exchange_bets as $key => $row) {
+								    				?>
+								    				<tr>
+								    					<td><?= $row['name']; ?></td>
+								    					<td><?= $row['slip_bet_amount']; ?></td>
+								    					<td><?= $row['slip_type']; ?></td>
+								    					<td><?= $row['exchange_type']; ?></td>
+								    					<td><?= $row['fixed_selling_price']; ?></td>
+								    					<td><?= ($row['exchange_status'] == 0 ? 'Open' : 'Close')?></td>
+								    					<td><?= $row['created_datetime']; ?></td>
 								    				</tr>
 								    				<?php
 								    			}

@@ -42,3 +42,8 @@
     ?>
   </div>
 </nav>
+<div class="loader d-none">
+	<div class="spinner-border loader-icon" role="status">
+	  <span class="visually-hidden">Loading...</span>
+	</div>
+</div>

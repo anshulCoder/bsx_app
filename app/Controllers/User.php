@@ -29,6 +29,7 @@ class User extends BaseController
 		$betBattleModel = model('App\Models\BetBattleModel', false);
 		$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
 		$sequelBetModel = model('App\Models\SequelBetsModel', false);
+		$exchangeBetModel = model('App\Models\ExchangeBetsModel', false);
 		$user_id = $this->session->get('user_id');
 		$data['bets'] = $mediaBetModel->get_media_bets($user_id);
 		$battles = $betBattleModel->get_battles_by_user($user_id);
@@ -48,6 +49,7 @@ class User extends BaseController
 		$data['requested_battles'] = $betBattleModel->get_requested_battles($user_id);
 		$data['open_public_battles'] = $betBattleModel->get_public_battles($user_id);
 		$data['sequel_bets'] = $sequelBetModel->get_sequel_bets($user_id);
+		$data['exchange_bets'] = $exchangeBetModel->get_exchange_bets($user_id);
 		$data['header'] = view('common/Header');
 		echo view('common/commoncss');
 		echo view('common/commonjs');
@@ -400,5 +402,63 @@ class User extends BaseController
 		echo view('common/commoncss');
 		echo view('common/commonjs');
 		echo view('User/add_new_sequel_bet', $data);
+	}
+
+	public function fetch_casting($media_id)
+	{
+		$data = array();
+
+		if(empty($media_id)) {
+			$data['status'] = false;
+			$data['error'] = 'Media Not found!';
+		} else {
+			$mediaModel = model('App\Models\MediaModel', false);
+			$castingModel = model('App\Models\CastingModel', false);
+			$data['media_data'] = $mediaModel->where('id', $media_id)->first();
+			$casting_data = array();
+			$casting_data['actors_list'] = $castingModel->where('cast_type', 1)->orderBy('cast_name','ASC')->findAll();
+			$casting_data['actresses_list'] = $castingModel->where('cast_type', 2)->orderBy('cast_name','ASC')->findAll();
+			$casting_data['directors_list'] = $castingModel->where('cast_type', 3)->orderBy('cast_name','ASC')->findAll();
+			$data['casting_data'] = $casting_data;
+			$data['status'] = true;
+		}
+
+		echo json_encode($data);
+	}
+
+	public function save_sequel_bet()
+	{
+		$user_id = $this->request->getVar('user_id');
+
+		if(empty($user_id))
+		{
+			return redirect()->back();
+		}
+		else
+		{
+			$sequelBetsModel = model('App\Models\SequelBetsModel', false);
+			$userModel = model('App\Models\UserModel', false);
+
+			$actors = array_map(function($v) {return $v ?: 'NA';}, $this->request->getVar('actors'));
+			$actresses = array_map(function($v) {return $v ?: 'NA';}, $this->request->getVar('actresses'));
+			$directors = array_map(function($v) {return $v ?: 'NA';}, $this->request->getVar('directors'));
+
+			$add_data = array(
+				'media_id' => $this->request->getVar('media_name'),
+				'user_id' => $this->request->getVar('user_id'),
+				'sequel_bet_amount' => $this->request->getVar('bet_amount'),
+				'sequel_bet_day' => $this->request->getVar('bet_day_start').'-'.$this->request->getVar('bet_day_end'),
+				'sequel_bet_month' => $this->request->getVar('bet_month'),
+				'sequel_bet_year' => $this->request->getVar('bet_year'),
+				'sequel_bet_actors' => json_encode($actors),
+				'sequel_bet_actresses' => json_encode($actresses),
+				'sequel_bet_directors' => json_encode($directors)
+			);
+			$sequelBetsModel->insert($add_data);
+			$userModel->update_wallet_balance($this->request->getVar('user_id'), '-'.(double)$this->request->getVar('bet_amount'));
+			$current_wallet_session = $this->session->get('user_wallet_balance');
+			$this->session->set('user_wallet_balance', (double)$current_wallet_session - (double)$this->request->getVar('bet_amount'));
+			return redirect()->to('/user');
+		}
 	}
 }

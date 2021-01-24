@@ -1,4 +1,5 @@
 <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
 <link href="/assets/css/general.css" rel="stylesheet">
 <style>
   .bd-placeholder-img {
