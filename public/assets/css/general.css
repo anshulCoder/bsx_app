@@ -1,6 +1,3 @@
-.sidebar {
-	height: calc(100vh - 48px);
-}
 .sidebar .nav-link {
     color: #000;
 }
@@ -22,4 +19,29 @@
 	position: absolute;
 	top: 50%;
 	left: 50%;
+}
+
+.exchange-page .my-mainMenuList li>input
+{
+	display: none;
+}
+
+.exchange-page .my-mainMenuList li>label
+{
+    cursor: pointer;
+    border:1px solid #ccc;
+    -webkit-border-radius:5px;
+    -moz-border-radius:5px;
+    border-radius:5px;
+    -webkit-box-shadow: 0 0 5px #ccc;
+    -moz-box-shadow: 0 0 5px #ccc;
+    box-shadow: 0 0 5px #ccc;
+    margin: 20px;
+    padding: 20px;
+    text-align:center;
+}
+
+.exchange-page .my-mainMenuList li input[type="radio"]:checked +label
+{
+    background-color:#ccc;
 }

@@ -24,3 +24,7 @@ function get_battle_status($status_no)
 
 	return $status;
 }
+
+function search_array(&$item, $item_key, $key_to_match) {
+	$item = isset($item[$key_to_match]) ? $item[$key_to_match] : 0;
+}

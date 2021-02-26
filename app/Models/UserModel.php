@@ -11,7 +11,7 @@ class UserModel extends Model
     protected $returnType     = 'array';
     protected $useSoftDeletes = false;
 
-    protected $allowedFields = ['name', 'username', 'email', 'password', 'wallet_balance', 'if_active'];
+    protected $allowedFields = ['name', 'username', 'email', 'password', 'wallet_balance', 'points_bet_accuracy', 'points_bet_battle', 'points_sequel_bet', 'points_total', 'if_active'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_datetime';
@@ -28,6 +28,22 @@ class UserModel extends Model
         $query = $builder->where('id', $user_id)
                          ->set('wallet_balance', '`wallet_balance`'.$balance, FALSE)
                          ->update();
+        return true;
+    }
+
+    public function increment_column_value($column, $value, $user_id)
+    {
+        $builder = $this->db->table('user');
+        $builder->where('id', $user_id)
+                ->increment($column, $value);
+        return true;
+    }
+
+    public function decrement_column_value($column, $value, $user_id)
+    {
+        $builder = $this->db->table('user');
+        $builder->where('id', $user_id)
+                ->decrement($column, $value);
         return true;
     }
 }

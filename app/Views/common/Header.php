@@ -36,7 +36,7 @@
     	if(!empty($session->get('user_id')))
     	{
     		?>
-    		<span class="text-white">Welcome <?= $session->get('user_name'); ?>, Wallet: <?= $session->get('user_wallet_balance');?></span>
+    		<span class="text-white">Welcome <?= $session->get('user_name'); ?>, Wallet: <?= $session->get('user_wallet_balance');?>  Points: <?= $session->get('user_total_points'); ?></span>
     		<?php
     	}
     ?>

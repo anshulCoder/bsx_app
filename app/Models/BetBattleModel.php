@@ -78,4 +78,30 @@ class BetBattleModel extends Model
         return $query->getResultArray();
     }
 
+    public function user_slips_for_exchange($user_id, $except_ids = array())
+    {
+        $builder = $this->db->table('bet_battle');
+        $builder->select("media.name, media.description, media.release_date, battle_id, player1_battle_description as battle_description, player2_battle_description as battle_opponent_description, battle_amount, battle_mode, battle_end_date, user.name as battle_opponent")
+                    ->join('media','media.id = bet_battle.media_selected_id')
+                    ->join('user', 'user.id = bet_battle.player2_id')
+                    ->where('bet_battle.player1_id', $user_id)
+                    ->where('bet_battle.battle_status', BATTLE_LIVE)
+                    ->where('bet_battle.battle_end_date >=', date('Y-m-d'));
+        if(count($except_ids)>0) {
+            $builder->whereNotIn('battle_id', $except_ids);
+        }
+        $query = $builder->get();
+        return $query->getResultArray();
+    }
+
+    public function bet_slips_by_ids($battle_ids)
+    {
+        $builder = $this->db->table('bet_battle');
+        $query = $builder->select("media.name, media.description, media.release_date, battle_id, player1_battle_description as battle_description, player2_battle_description as battle_opponent_description, battle_amount, battle_mode, battle_end_date, user.name as battle_opponent")
+                    ->join('media','media.id = bet_battle.media_selected_id')
+                    ->join('user', 'user.id = bet_battle.player2_id')
+                    ->whereIn('bet_battle.battle_id', $battle_ids)->get();
+        return $query->getResultArray();
+    }
+
 }
