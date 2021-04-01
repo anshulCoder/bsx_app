@@ -11,7 +11,7 @@ class MediaModel extends Model
     protected $returnType     = 'array';
     protected $useSoftDeletes = false;
 
-    protected $allowedFields = ['name', 'description', 'release_date', 'betting_allowed'];
+    protected $allowedFields = ['name', 'description', 'release_date', 'betting_allowed', 'rating', 'casting_info', 'current_value', 'media_images', 'actors', 'actresses', 'directors', 'active'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_datetime';

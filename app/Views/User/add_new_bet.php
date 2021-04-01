@@ -8,7 +8,26 @@
 		<?= $header; ?>
 
 		<main class="container">
-
+		  <?php
+		  	$session = \Config\Services::session();
+		  	$wallet_error = $session->getFlashData('wallet_error');
+		  	if(isset($wallet_error))
+		  	{
+		  		?>
+		  		<div class="toast-container position-absolute p-3 top-0 start-50 translate-middle-x" id="toastPlacement">
+				    <div class="toast">
+				      <div class="toast-header">
+				        <strong class="me-auto">Error!</strong>
+				        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				      </div>
+				      <div class="toast-body">
+				        <?= $wallet_error; ?>
+				      </div>
+				    </div>
+				</div>
+		  		<?php
+		  	}
+		  ?>
 		  <div class="py-5 px-3">
 		  	<form action="/user/save_accuracy_bet" id="save-media-form" method="post" class="form-horizontal" role="form">
 		  	  <div class="mb-3">
@@ -45,7 +64,6 @@
 			    <label for="bet_date" class="form-label">Bet Date</label>
 			    <input type="text" class="form-control" name="bet_date" id="bet_date" required>
 			  </div>
-			  <?php $session = \Config\Services::session(); ?>
 			  <input type="hidden" name="user_id" value="<?= $session->get('user_id'); ?>"/>
 			  <button type="submit" class="btn btn-primary">Submit</button>
 			</form>
@@ -55,6 +73,11 @@
 	</body>
 	<script src="/assets/js/bootstrap-datepicker.min.js"></script>
 	<script>
+		var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+		var toastList = toastElList.map(function (toastEl) {
+		  return new bootstrap.Toast(toastEl, {delay: 10000})
+		});
+		if(toastList[0]) toastList[0].show();
 		$(document).ready(function() {
 			changeBetDateSelection();
 		});

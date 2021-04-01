@@ -27,6 +27,7 @@ class BaseController extends Controller
 	 * @var array
 	 */
 	protected $helpers = [];
+	//protected $tmdb;
 
 	/**
 	 * Constructor.
@@ -41,6 +42,7 @@ class BaseController extends Controller
 		//--------------------------------------------------------------------
 		// E.g.:
 		$this->session = \Config\Services::session();
+		//$this->tmdb = new TMDB_API();
 	}
 
 }

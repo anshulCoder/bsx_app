@@ -81,9 +81,9 @@
                                     	elseif($bet_type == 'Bet Battle')
                                     	{
                                     		?>
-                                    		<span>Your Prediction: <?= $row['battle_description'] ?></span>
+                                    		<span>Battle Prediction: <?= $row['battle_description'] ?></span>
                                     		<br>
-                                    		<span>Opp Prediction: <?= $row['battle_opponent_description'] ?></span>
+                                    		<span>With/Against Prediction: <?= ($row['player_for'] == 1 ? 'With' : 'Against') ?></span>
                                     		<br>
                                     		<span>Battle With: <?= $row['battle_opponent'] ?></span>
                                     		<br>

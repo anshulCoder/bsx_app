@@ -18,7 +18,7 @@ class Filters extends BaseConfig
 		'before' => [
 			//'honeypot'
 			// 'csrf',
-			'UserLoginFilter' => ['except' => ['/user/login', '/user/check_user_login', '/admin', '/admin/*']]
+			'UserLoginFilter' => ['except' => [ '/', '/login', '/login/check_login', '/admin', '/admin/*', '/tmdb', '/tmdb/*', '/home/*']]
 		],
 		'after'  => [
 			'toolbar',

@@ -8,9 +8,28 @@
 		helper('general');
 		$session = \Config\Services::session();
 	?>
+	
 	<body>
 		<?= $header; ?>
 		<main class="container-fluid">
+			<?php
+			  	if(isset($wallet_error))
+			  	{
+			  		?>
+			  		<div class="toast-container position-absolute p-3 top-0 start-50 translate-middle-x" id="toastPlacement">
+					    <div class="toast">
+					      <div class="toast-header">
+					        <strong class="me-auto">Error!</strong>
+					        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+					      </div>
+					      <div class="toast-body">
+					        <?= $wallet_error; ?>
+					      </div>
+					    </div>
+					</div>
+			  		<?php
+			  	}
+			?>
 			<div class="row">
 				<div class="col-md-2 bg-light sidebar pe-0 pt-5">
 					<div>
@@ -57,13 +76,14 @@
 						  										<h5 class="card-title"><?= $row['media_name']; ?></h5>
 						  										<p class="card-text">Bet Amount: <?= $row['battle_amount'] + ($row['battle_amount'] * $total_additional);?></p>
 						  										<p>Additional players: <?= $total_additional; ?></p>
+						  										<p><?= $row['battle_description']; ?></p>
 						  										<div class="d-flex">
 						  											<?php 
 						  												if ($total_additional == 0) $total_additional++;
 						  											?>
 						  											<div class="player1-wrapper w-50" style="text-align: left">
 						  												<h3><?= $row['player1_name']; ?></h3>
-						  												<p><?= $row['player1_battle_description']; ?></p>
+						  												<p><?= ($row['player_for'] == 1 ? 'With Prediction' : 'Against Prediction') ?></p>
 						  												<?php
 						  													if(isset($row['bet_exists']) || $row['player1_id'] == $session->get('user_id') || $row['player2_id'] == $session->get('user_id'))
 						  													{
@@ -75,7 +95,7 @@
 						  											</div>
 						  											<div class="player2-wrapper w-50" style="text-align:right">
 						  												<h3><?= $row['player2_name']; ?></h3>
-						  												<p><?= $row['player2_battle_description']; ?></p>
+						  												<p><?= ($row['player_for'] == 2 ? 'With Prediction' : 'Against Prediction') ?></p>
 						  												<?php
 						  													if(isset($row['bet_exists']) || $row['player1_id'] == $session->get('user_id') || $row['player2_id'] == $session->get('user_id'))
 						  													{
@@ -180,9 +200,9 @@
 					  												<?php
 					  											} elseif($slip_id_column == 'battle_id') {
 					  												?>
-					  												<p><strong>Your prediction: </strong><?= $bet_detail['battle_description']; ?></p>
-					  												<p><strong>Opp prediction: </strong><?= $bet_detail['battle_opponent_description']; ?></p>
-					  												<p><strong>Battle With: </strong><?= $bet_detail['battle_opponent']; ?></p>
+					  												<p><strong>Battle prediction: </strong><?= $bet_detail['battle_description']; ?></p>
+					  												<p><strong>With prediction: </strong><?= ($bet_detail['player_for'] == 1 ? $bet_detail['player1_name'] : $bet_detail['player2_name']); ?></p>
+					  												<p><strong>Against Prediction: </strong><?= ($bet_detail['player_against'] == 1 ? $bet_detail['player1_name'] : $bet_detail['player2_name']); ?></p>
 					  												<p><strong>Stake: </strong><?= $bet_detail['battle_amount'] ?></p>
 					  												<p><strong>End Date: </strong><?= $bet_detail['battle_end_date'] ?></p>
 					  												<p><strong>Battle status: </strong><?= $bet_detail['battle_mode'] ?></p>
@@ -320,8 +340,8 @@
 								    		<tr>
 								    			<th>Media Name</th>
 								    			<th>Bet amount</th>
-								    			<th>Your Prediction</th>
-								    			<th>Opponent Prediction</th>
+								    			<th>Battle Description</th>
+								    			<th>With/Against Prediction</th>
 								    			<th>Battle with</th>
 								    			<th>Bet End Date</th>
 								    			<th>Battle Status</th>
@@ -336,20 +356,19 @@
 								    				<tr>
 								    					<td><?= $row['name']; ?></td>
 								    					<td><?= $row['battle_amount']; ?></td>
+								    					<td><?= $row['battle_description']; ?></td>
 								    					<?php
 								    						if($row['user1_id'] == $session->get('user_id'))
 								    						{
 								    							?>
-								    								<td><?= $row['player1_battle_description'];?></td>
-								    								<td><?= $row['player2_battle_description'];?></td>
+								    								<td><?= ($row['player_for'] == 1 ? 'With' : 'Against');?></td>
 								    								<td><?= $row['user2_name'];?></td>
 								    							<?php
 								    						}
 								    						else
 								    						{
 								    							?>
-								    								<td><?= $row['player2_battle_description'];?></td>
-								    								<td><?= $row['player1_battle_description'];?></td>
+								    								<td><?= ($row['player_for'] == 2 ? 'With' : 'Against');?></td>
 								    								<td><?= $row['user1_name'];?></td>
 								    							<?php
 								    						}
@@ -379,8 +398,8 @@
 								    		<tr>
 								    			<th>Media Name</th>
 								    			<th>Bet amount</th>
-								    			<th>Your Prediction</th>
-								    			<th>Opponent Prediction</th>
+								    			<th>Battle Description</th>
+								    			<th>With/Against Prediction</th>
 								    			<th>Battle with</th>
 								    			<th>Bet End Date</th>
 								    			<th>Battle Status</th>
@@ -397,20 +416,19 @@
 								    				<tr>
 								    					<td><?= $row['name']; ?></td>
 								    					<td><?= $row['battle_amount']; ?></td>
+								    					<td><?= $row['battle_description'];?></td>
 								    					<?php
 								    						if($row['user1_id'] == $session->get('user_id'))
 								    						{
 								    							?>
-								    								<td><?= $row['player1_battle_description'];?></td>
-								    								<td><?= $row['player2_battle_description'];?></td>
+								    								<td><?= ($row['player_for'] == 1 ? 'With' : 'Against');?></td>
 								    								<td><?= $row['user2_name'];?></td>
 								    							<?php
 								    						}
 								    						else
 								    						{
 								    							?>
-								    								<td><?= $row['player2_battle_description'];?></td>
-								    								<td><?= $row['player1_battle_description'];?></td>
+								    								<td><?= ($row['player_for'] == 2 ? 'With' : 'Against');?></td>
 								    								<td><?= $row['user1_name'];?></td>
 								    							<?php
 								    						}
@@ -501,34 +519,14 @@
 								    				<tr>
 								    					<td><?= $row['name']; ?></td>
 								    					<td><?= $row['battle_amount']; ?></td>
-								    					<td>
-								    						<?php
-								    							if($row['battle_status'] == BATTLE_PENDING_PLAYER2)
-								    							{
-								    								echo $row['player1_battle_description'];
-								    							}
-								    							else
-								    							{
-								    								echo $row['player2_battle_description'];
-								    							}
-								    						?>
-								    					</td>
+								    					<td><?= $row['battle_description']; ?></td>
 								    					<td><?= $row['battle_with']; ?></td>
 								    					<td><?= $row['battle_mode']; ?></td>
 								    					<td><?= $row['battle_end_date']; ?></td>
 								    					<td><?php
-								    						if($row['battle_status'] == BATTLE_PENDING_PLAYER2)
-								    						{
-								    							?>
-								    							<a href="#" data-battle-id="<?= $row['battle_id'];?>" class="btn btn-success ask-description" title="Accept"><i class="fas fa-check"></i></a>
-								    							<?php
-								    						}
-								    						else
-								    						{
-								    							?>
-								    							<a href="/user/accept-battle/<?= $row['battle_id'];?>" class="btn btn-success" title="Accept"><i class="fas fa-check"></i></a>
-								    							<?php
-								    						}
+								    						?>
+							    							<a href="/user/accept-battle/<?= $row['battle_id'];?>" class="btn btn-success" title="Accept"><i class="fas fa-check"></i></a>
+							    							<?php
 								    					?>&nbsp;&nbsp;
 								    					<a href="/user/deny-battle/<?= $row['battle_id'];?>" class="btn btn-danger" title="Decline"><i class="fas fa-times"></i></a></td>
 								    				</tr>
@@ -1020,6 +1018,7 @@
 			  return new bootstrap.Toast(toastEl, {delay: 10000})
 			});
 			if(toastList[0]) toastList[0].show();
+			if(toastList[1]) toastList[1].show();
 
 			$(document).on('click', '.ask-description', function(e) {
 				let battle_id = $(this).attr('data-battle-id');

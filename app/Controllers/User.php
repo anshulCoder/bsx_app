@@ -10,18 +10,6 @@ class User extends BaseController
 		$this->validation =  \Config\Services::validation();
 	}
 
-	public function login()
-	{
-		if (!empty($this->session->get('user_id')))
-		{
-			return redirect()->to('/user');
-		}
-		echo view('common/commoncss');
-		echo view('common/commonjs');
-		$data = array();
-		$data['header'] = view('common/Header');
-		echo view('User/login', $data);
-	}
 	public function index()
 	{
 		$data = array();
@@ -48,7 +36,7 @@ class User extends BaseController
 		$data['private_battles'] = $private_battles;
 		$data['participated_battles'] = $additionalBetsModel->fetch_participated_battles($user_id);
 		$data['requested_battles'] = $betBattleModel->get_requested_battles($user_id);
-		$data['open_public_battles'] = $betBattleModel->get_public_battles($user_id);
+		$data['open_public_battles'] = []; // $betBattleModel->get_public_battles($user_id);
 		$data['sequel_bets'] = $sequelBetModel->get_sequel_bets($user_id);
 
 		$data['exchange_bets'] = $this->fetch_exchange_bet_slips($user_id);
@@ -88,6 +76,15 @@ class User extends BaseController
 
 		if(!empty($media_id) && !empty($bet_amount) && !empty($predicted_amount) && !empty($bet_date))
 		{
+			$userModel = model('App\Models\UserModel', false);
+			$user_data = $userModel->where('id', $user_id)->first();
+			$updated_wallet_balance = $user_data['wallet_balance'] - $bet_amount;
+			if($updated_wallet_balance < 0)
+			{
+				$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+				return redirect()->to('/user/new-accuracy-bet');
+			}
+
 			$media_bet_data = array(
 				'media_id' => $media_id,
 				'user_id' => $user_id,
@@ -95,13 +92,25 @@ class User extends BaseController
 				'predicted_amount' => $predicted_amount,
 				'betting_date' => $bet_date
 			);
+
 			$mediaBetModel = model('App\Models\MediaBetModel', false);
+			$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
 			$mediaBetModel->insert($media_bet_data);
+
+			$userModel->decrement_column_value('wallet_balance', $bet_amount, $user_id);
+			$this->session->set('user_wallet_balance', $updated_wallet_balance);
+			$walletLogMasterModel->insert(array(
+				'log_title' => 'Bet Accuracy slip purchased',
+				'log_description' => 'Accuracy bet purchased for '.$bet_amount.' bet amount',
+				'amount' => $bet_amount,
+				'amount_action' => 1,
+				'user_id' => $user_id
+			));
 			return redirect()->to('/user');
 		}
 		else
 		{
-			return redirect()->back();
+			return redirect()->to('/user/new-accuracy-bet');
 		}
 	}
 
@@ -196,6 +205,7 @@ class User extends BaseController
 		$input = $this->validate([
 			'player2_id' => 'required',
 			'battle_description' => 'required',
+			'prediction_type' => 'required',
 			'battle_amount' => 'required|numeric',
 			'battle_mode' => 'required',
 			'media_selected_id' => 'required',
@@ -208,11 +218,24 @@ class User extends BaseController
         }
         else
         {
+        	$user_id = $this->session->get('user_id');
+        	$userModel = model('App\Models\UserModel', false);
+        	$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
+			$user_data = $userModel->where('id', $user_id)->first();
+			$updated_wallet_balance = $user_data['wallet_balance'] - $this->request->getVar('battle_amount');
+			if($updated_wallet_balance < 0)
+			{
+				$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+				return redirect()->to('/user/new-battle-bet');
+			}
+
         	$betBattleModel = model('App\Models\BetBattleModel', false);
         	$battle_details = array(
-        		'player1_id' => $this->session->get('user_id'),
+        		'player1_id' => $user_id,
         		'player2_id' => $this->request->getVar('player2_id'),
-        		'player1_battle_description' => $this->request->getVar('battle_description'),
+        		'battle_description' => $this->request->getVar('battle_description'),
+        		'player_for' => ($this->request->getVar('prediction_type') == '1' ? 1 : 2),
+        		'player_against' => ($this->request->getVar('prediction_type') == '2' ? 1 : 2),
 				'battle_amount' => $this->request->getVar('battle_amount'),
 				'battle_mode' => $this->request->getVar('battle_mode'),
 				'additional_bet_amount' => $this->request->getVar('additional_bet_amount') ?: 0,
@@ -221,6 +244,16 @@ class User extends BaseController
 				'battle_status' => 0
         	);
         	$betBattleModel->insert($battle_details);
+
+        	$userModel->decrement_column_value('wallet_balance', $this->request->getVar('battle_amount'), $user_id);
+			$this->session->set('user_wallet_balance', $updated_wallet_balance);
+			$walletLogMasterModel->insert(array(
+				'log_title' => 'Bet Battle slip purchased',
+				'log_description' => 'Battle bet purchased for '.$this->request->getVar('battle_amount').' bet amount',
+				'amount' => $this->request->getVar('battle_amount'),
+				'amount_action' => 1,
+				'user_id' => $user_id
+			));
             return redirect()->to('/user');
         }
 	}
@@ -233,10 +266,31 @@ class User extends BaseController
 		}
 
 		$betBattleModel = model('App\Models\BetBattleModel', false);
+		$battle_data = $betBattleModel->where('battle_id', $battle_id)->first();
+
+		$updated_wallet_balance = $this->session->get('user_wallet_balance') - $battle_data['battle_amount'];
+		if($updated_wallet_balance < 0)
+		{
+			$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+			return redirect()->to('/user');
+		}
+
+		$betBattleModel = model('App\Models\BetBattleModel', false);
+		$userModel = model('App\Models\UserModel', false);
+		$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
 		$data = array(
 			'battle_status' => BATTLE_LIVE
 		);
 		$betBattleModel->update($battle_id, $data);
+		$userModel->decrement_column_value('wallet_balance', $battle_data['battle_amount'], $this->session->get('user_id'));
+		$this->session->set('user_wallet_balance', $updated_wallet_balance);
+		$walletLogMasterModel->insert(array(
+			'log_title' => 'Bet Battle Accepted',
+			'log_description' => 'Battle bet(# '.$battle_id.') Accepted for '.$battle_data['battle_amount'].' bet amount',
+			'amount' => $battle_data['battle_amount'],
+			'amount_action' => 1,
+			'user_id' => $this->session->get('user_id')
+		));
 		return redirect()->to('/user');
 	}
 
@@ -246,7 +300,19 @@ class User extends BaseController
 		{
 			return redirect()->to('/user');
 		}
+		$betBattleModel = model('App\Models\BetBattleModel', false);
+		$battle_data = $betBattleModel->where('battle_id', $battle_id)->first();
 
+		$userModel = model('App\Models\UserModel', false);
+		$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
+		$userModel->increment_column_value('wallet_balance', $battle_data['battle_amount'], $battle_data['player1_id']);
+		$walletLogMasterModel->insert(array(
+			'log_title' => 'Bet Battle Rejected',
+			'log_description' => 'Battle bet(# '.$battle_id.') Rejected by opponent '.$battle_data['battle_amount'].' bet amount reversed',
+			'amount' => $battle_data['battle_amount'],
+			'amount_action' => 2,
+			'user_id' => $battle_data['player1_id']
+		));
 		$betBattleModel = model('App\Models\BetBattleModel', false);
 		$data = array(
 			'battle_status' => BATTLE_REJECTED
@@ -255,6 +321,7 @@ class User extends BaseController
 		return redirect()->to('/user');
 	}
 
+	// not using
 	public function player2_battle_approval()
 	{
 		$battle_id = $this->request->getVar('bet_battle_id');
@@ -314,9 +381,10 @@ class User extends BaseController
 		$userModel = model('App\Models\UserModel', false);
 		$battleResultsModel = model('App\Models\BattleResultsModel', false);
 		$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
+		$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
 
 		$claimed_user_id = $this->session->get('user_id');
-		$current_wallet_balance = $this->session->get('user_wallet_balance');
+		$winner_user_data = $userModel->where('id', $claimed_user_id)->first();
 
 		$additional_bets = array();
 		$winner_additional_amount = 0;
@@ -329,30 +397,110 @@ class User extends BaseController
 
 		if(count($additional_bets)>0)
 		{
+			$additional_earnings = array_sum(array_column($additional_bets, 'bet_amount'));
+			$additional_winner_count = count($additionalBetsModel->where('bet_battle_id', $battle_id)->where('rooting_for_user', $claimed_user_id)->findAll());
+			$additional_winner_percentage = round(($additional_winner_count/count($additional_bets))*100, 2);
+			if($additional_winner_percentage <= 90)
+			{
+				$winner_additional_amount += $additional_earnings * 0.1;
+			}
+			$additional_users_winning = round(($additional_earnings - $winner_additional_amount) / $additional_winner_count, 2);
 			foreach($additional_bets as $addKey => $addRow)
 			{
 				if($addRow['rooting_for_user'] == $claimed_user_id)
 				{
-					$winner_additional_amount += (double)($addRow['bet_amount']/2);
-					$userModel->update_wallet_balance($addRow['user_id'], '+'.($addRow['bet_amount']/2));
+					// winner update
+					$userModel->update_wallet_balance($addRow['user_id'], '+'.$additional_users_winning);
+					$walletLogMasterModel->insert(array(
+						'log_title' => 'Bet Battle won',
+						'log_description' => 'Additional Bet on battle won, you earned '.$additional_users_winning.' wallet balance',
+						'amount' => $additional_users_winning,
+						'amount_action' => 2,
+						'user_id' => $addRow['user_id']
+					));
 				}
 			}
 		}
 
-		$updated_winner_balance = (double)$battle_info['battle_amount'] + $winner_additional_amount;
-		$userModel->update_wallet_balance($claimed_user_id, '+'.$updated_winner_balance);
-		$this->session->set('user_wallet_balance', $current_wallet_balance + $updated_winner_balance);
+		$balance_won = (double)$battle_info['battle_amount'] + $winner_additional_amount;
+		$new_wallet_balance = $winner_user_data['wallet_balance'] + $balance_won;
+
+		// points calculation for winner
+		$all_bets_by_winner = $battleResultsModel->where('winner_player_id', $claimed_user_id)->orWhere('loser_player_id',$claimed_user_id)->findAll();
+		$points_bb = 0;
+		$k = 30;
+		$total_bets_won = array_filter($all_bets_by_winner, function($k, $v) {
+			return ($k == 'winner_player_id' && $v == $claimed_user_id);
+		}, ARRAY_FILTER_USE_BOTH);
+		$we = 0;
+		$w = 1;
+		if(count($all_bets_by_winner)>0)
+		{
+			$we = round(count($total_bets_won)/count($all_bets_by_winner), 2);
+		}
+		$points_bb = $k * (round($w - $we, 2));
+		$new_total_points = $winner_user_data['points_total'] + $points_bb;
+		$new_points_bb = $winner_user_data['points_bet_battle'] + $points_bb;
+
+		$userModel->update($claimed_user_id, array(
+			'wallet_balance' => $new_wallet_balance,
+			'points_bet_battle' => $new_points_bb,
+			'points_total' => $new_total_points
+		));
+		$this->session->set('user_wallet_balance', $new_wallet_balance);
+		$this->session->set('user_total_points', $new_total_points);
+
+		$walletLogMasterModel->insert(array(
+			'log_title' => 'Bet Battle won',
+			'log_description' => 'Bet battle(# '.$battle_id.') won, you earned '.$balance_won.' wallet balance and '.$points_bb.' Points',
+			'amount' => $balance_won,
+			'amount_action' => 2,
+			'points_for_bet_battle' => $points_bb,
+			'points_for_total' => $new_total_points,
+			'user_id' => $claimed_user_id
+		));
 
 		//loser update
 		$lost_user_id = ($battle_info['player1_id'] == $claimed_user_id ? $battle_info['player2_id'] : $battle_info['player1_id']);
-		$userModel->update_wallet_balance($lost_user_id, '-'.(double)$battle_info['battle_amount']);
+		$loser_user_data = $userModel->where('id', $lost_user_id)->first();
+
+		// points calculation for loser
+		$all_bets_by_looser = $battleResultsModel->where('winner_player_id', $lost_user_id)->orWhere('loser_player_id',$lost_user_id)->findAll();
+		$points_bb = 0;
+		$k = 30;
+		$total_bets_won = array_filter($all_bets_by_looser, function($k, $v) {
+			return ($k == 'winner_player_id' && $v == $lost_user_id);
+		}, ARRAY_FILTER_USE_BOTH);
+		$we = 0;
+		$w = 0;
+		if(count($all_bets_by_looser)>0)
+		{
+			$we = round(count($total_bets_won)/count($all_bets_by_looser), 2);
+		}
+		$points_bb = $k * (round($w - $we, 2));
+		$new_total_points = $loser_user_data['points_total'] + $points_bb;
+		$new_points_bb = $loser_user_data['points_bet_battle'] + $points_bb;
+		$userModel->update($lost_user_id, array(
+			'points_bet_battle' => $new_points_bb,
+			'points_total' => $new_total_points
+		));
+
+		$walletLogMasterModel->insert(array(
+			'log_title' => 'Bet Battle Lost',
+			'log_description' => 'Bet battle(# '.$battle_id.') lost, you get '.$points_bb.' Points',
+			'amount' => $battle_info['battle_amount'],
+			'amount_action' => 1,
+			'points_for_bet_battle' => $points_bb,
+			'points_for_total' => $new_total_points,
+			'user_id' => $lost_user_id
+		));
 
 		//saving result
 		$battle_result = array(
 			'battle_id' => $battle_id,
 			'winner_player_id' => $claimed_user_id,
 			'loser_player_id' => $lost_user_id,
-			'win_amount' => $updated_winner_balance
+			'win_amount' => $balance_won
 		);
 		$battleResultsModel->insert($battle_result);
 
@@ -386,16 +534,36 @@ class User extends BaseController
 		{
 			$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
 			$userModel = model('App\Models\UserModel', false);
+			$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
+			$user_id = $this->request->getVar('user_id');
+			$user_data = $userModel->where('id', $user_id)->first();
+			$bet_amount = $this->request->getVar('bet_amount');
+
+			$updated_wallet_balance = $user_data['wallet_balance'] - (double)$bet_amount;
+
+			if($updated_wallet_balance < 0)
+			{
+				$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+				return redirect()->to('/user/participate-public-battle/'.$this->request->getVar('bet_battle_id'));
+			}
+
 			$add_data = array(
 				'bet_battle_id' => $this->request->getVar('bet_battle_id'),
-				'user_id' => $this->request->getVar('user_id'),
-				'bet_amount' => $this->request->getVar('bet_amount'),
+				'user_id' => $user_id,
+				'bet_amount' => $bet_amount,
 				'rooting_for_user' => $rooting_for_user
 			);
 			$additionalBetsModel->insert($add_data);
-			$userModel->update_wallet_balance($this->request->getVar('user_id'), '-'.(double)$this->request->getVar('bet_amount'));
+			$userModel->decrement_column_value('wallet_balance', (double)$bet_amount, $user_id);
 			$current_wallet_session = $this->session->get('user_wallet_balance');
-			$this->session->set('user_wallet_balance', (double)$current_wallet_session - (double)$this->request->getVar('bet_amount'));
+			$this->session->set('user_wallet_balance', $updated_wallet_balance);
+			$walletLogMasterModel->insert(array(
+				'log_title' => 'Additional Bet placed',
+				'log_description' => 'Additional bet placed on Bet battle(# '.$this->request->getVar('bet_battle_id').') for amount '.$bet_amount,
+				'amount' => $bet_amount,
+				'amount_action' => 1,
+				'user_id' => $user_id
+			));
 			return redirect()->to('/user');
 		}
 	}
@@ -447,6 +615,15 @@ class User extends BaseController
 		{
 			$sequelBetsModel = model('App\Models\SequelBetsModel', false);
 			$userModel = model('App\Models\UserModel', false);
+			$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
+			$user_data = $userModel->where('id', $user_id)->first();
+			$updated_wallet_balance = $user_data['wallet_balance'] - (double)$this->request->getVar('bet_amount');
+
+			if($updated_wallet_balance < 0)
+			{
+				$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+				return redirect()->to('/user/new-sequel-bet');
+			}
 
 			$actors = array_map(function($v) {return $v ?: 'NA';}, $this->request->getVar('actors'));
 			$actresses = array_map(function($v) {return $v ?: 'NA';}, $this->request->getVar('actresses'));
@@ -454,7 +631,7 @@ class User extends BaseController
 
 			$add_data = array(
 				'media_id' => $this->request->getVar('media_name'),
-				'user_id' => $this->request->getVar('user_id'),
+				'user_id' => $user_id,
 				'sequel_bet_amount' => $this->request->getVar('bet_amount'),
 				'sequel_bet_day' => $this->request->getVar('bet_day_start').'-'.$this->request->getVar('bet_day_end'),
 				'sequel_bet_month' => $this->request->getVar('bet_month'),
@@ -464,9 +641,15 @@ class User extends BaseController
 				'sequel_bet_directors' => json_encode($directors)
 			);
 			$sequelBetsModel->insert($add_data);
-			$userModel->update_wallet_balance($this->request->getVar('user_id'), '-'.(double)$this->request->getVar('bet_amount'));
-			$current_wallet_session = $this->session->get('user_wallet_balance');
-			$this->session->set('user_wallet_balance', (double)$current_wallet_session - (double)$this->request->getVar('bet_amount'));
+			$userModel->decrement_column_value('wallet_balance', (double)$this->request->getVar('bet_amount'), $user_id);
+			$this->session->set('user_wallet_balance', $updated_wallet_balance);
+			$walletLogMasterModel->insert(array(
+				'log_title' => 'Sequel Bet created',
+				'log_description' => 'Sequel bet created for bet amount '.$this->request->getVar('bet_amount'),
+				'amount' => $this->request->getVar('bet_amount'),
+				'amount_action' => 1,
+				'user_id' => $user_id
+			));
 			return redirect()->to('/user');
 		}
 	}
@@ -686,6 +869,7 @@ class User extends BaseController
 					$userModel = model('App\Models\UserModel', false);
 					$mediaBetModel = model('App\Models\MediaBetModel', false);
 					$betBattleModel = model('App\Models\BetBattleModel', false);
+					$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
 
 					if($exchange_data['slip_type'] == 'Bet Accuracy')
 					{
@@ -701,6 +885,22 @@ class User extends BaseController
 					$userModel->update_wallet_balance($exchange_data['user_id'], '+'.(double)$exchange_data['fixed_selling_price']);
 					$current_wallet_session = $this->session->get('user_wallet_balance');
 					$this->session->set('user_wallet_balance', (double)$current_wallet_session - (double)$exchange_data['fixed_selling_price']);
+
+					$walletLogMasterModel->insert(array(
+						'log_title' => $exchange_data['slip_type'].' exchange slip purchased',
+						'log_description' => $exchange_data['slip_type'].' exchange slip(# '.$exchange_id.') purchased for amount '.$exchange_data['fixed_selling_price'],
+						'amount' => $exchange_data['fixed_selling_price'],
+						'amount_action' => 1,
+						'user_id' => $user_id
+					));
+
+					$walletLogMasterModel->insert(array(
+						'log_title' => $exchange_data['slip_type'].' exchange slip sold',
+						'log_description' => $exchange_data['slip_type'].' exchange slip(# '.$exchange_id.') sold for amount '.$exchange_data['fixed_selling_price'],
+						'amount' => $exchange_data['fixed_selling_price'],
+						'amount_action' => 2,
+						'user_id' => $exchange_data['user_id']
+					));
 
 					$data['status'] = true;
 				}
@@ -783,6 +983,7 @@ class User extends BaseController
 			$userModel = model('App\Models\UserModel', false);
 			$mediaBetModel = model('App\Models\MediaBetModel', false);
 			$betBattleModel = model('App\Models\BetBattleModel', false);
+			$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
 
 			if($exchange_data['slip_type'] == 'Bet Accuracy')
 			{
@@ -799,6 +1000,22 @@ class User extends BaseController
 			$userModel->update_wallet_balance($request_data['user_id'], '-'.(double)$request_data['requested_price']);
 			$current_wallet_session = $this->session->get('user_wallet_balance');
 			$this->session->set('user_wallet_balance', (double)$current_wallet_session + (double)$request_data['requested_price']);
+
+			$walletLogMasterModel->insert(array(
+				'log_title' => $exchange_data['slip_type'].' exchange slip bid won',
+				'log_description' => $exchange_data['slip_type'].' exchange slip(# '.$exchange_id.') bid of amount '.$request_data['requested_price'].' won',
+				'amount' => $request_data['requested_price'],
+				'amount_action' => 2,
+				'user_id' => $user_id
+			));
+
+			$walletLogMasterModel->insert(array(
+				'log_title' => $exchange_data['slip_type'].' exchange slip bid accepted',
+				'log_description' => $exchange_data['slip_type'].' exchange slip(# '.$exchange_id.') bid of amount '.$request_data['requested_price'].' accepted',
+				'amount' => $request_data['requested_price'],
+				'amount_action' => 1,
+				'user_id' => $request_data['user_id']
+			));
 
 			$data['status'] = true;
 		}
@@ -1112,6 +1329,15 @@ class User extends BaseController
 		$data['status'] = true;
 		$data['msg'] = $log_description;
 		return json_encode($data);
+	}
+
+	public function test_page()
+	{
+		$battleResultsModel = model('App\Models\BattleResultsModel', false);
+			
+		$all_bets = $battleResultsModel->where('winner_player_id', $claimed_user_id)->orWhere('loser_player_id',$claimed_user_id)->findAll();
+		echo '<pre>';
+		var_dump($all_bets);
 	}
 
 }

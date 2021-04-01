@@ -41,6 +41,8 @@ $routes->get('/user/login', 'User::login');
 $routes->get('/user/accept-battle/(:num)', 'User::accept_battle/$1');
 $routes->get('/user/deny-battle/(:num)', 'User::deny_battle/$1');
 $routes->get('/user/participate-public-battle/(:num)', 'User::participate_public_battle/$1');
+
+$routes->get('/tmdb/test-fetch-now-movies', 'TmdbController::fetch_latest_media');
 /**
  * --------------------------------------------------------------------
  * Additional Routing

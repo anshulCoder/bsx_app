@@ -10,6 +10,26 @@
 		<main class="container">
 		  <?php $validation = \Config\Services::validation();?>
 		  <?= $validation->listErrors() ?>
+		  <?php
+		  	$session = \Config\Services::session();
+		  	$wallet_error = $session->getFlashData('wallet_error');
+		  	if(isset($wallet_error))
+		  	{
+		  		?>
+		  		<div class="toast-container position-absolute p-3 top-0 start-50 translate-middle-x" id="toastPlacement">
+				    <div class="toast">
+				      <div class="toast-header">
+				        <strong class="me-auto">Error!</strong>
+				        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				      </div>
+				      <div class="toast-body">
+				        <?= $wallet_error; ?>
+				      </div>
+				    </div>
+				</div>
+		  		<?php
+		  	}
+		  ?>
 		  <div class="py-5 px-3">
 		  	<form action="/user/save_battle_bet" id="save-battle-form" method="post" class="form-horizontal" role="form">
 		  	  <div class="mb-3">
@@ -60,6 +80,18 @@
 			    <label for="battle_description" class="form-label">Battle Description:</label>
 			    <textarea cols="5" rows="10" name="battle_description" id="battle_description" class="form-control" required></textarea>
 			  </div>
+			  <div class="form-check">
+			  	<input class="form-check-input" type="radio" name="prediction_type" id="player_for" value="1" checked>
+				<label class="form-check-label" for="player_for">
+				  With Prediction
+				</label>
+			  </div>
+			  <div class="form-check">
+			  	<input class="form-check-input" type="radio" name="prediction_type" id="player_against" value="2">
+				<label class="form-check-label" for="player_against">
+				  Against Prediction
+				</label>
+			  </div>
 			  <div class="mb-3">
 			    <label for="battle_amount" class="form-label">Bet Amount</label>
 			    <input type="number" min="0" class="form-control" name="battle_amount" id="battle_amount" required>
@@ -79,7 +111,6 @@
 			    <label for="battle_end_date" class="form-label">Bet Date</label>
 			    <input type="text" class="form-control" name="battle_end_date" id="battle_end_date" required>
 			  </div>
-			  <?php $session = \Config\Services::session(); ?>
 			  <input type="hidden" name="user_id" value="<?= $session->get('user_id'); ?>"/>
 			  <button type="submit" class="btn btn-primary">Submit</button>
 			</form>
@@ -89,6 +120,11 @@
 	</body>
 	<script src="/assets/js/bootstrap-datepicker.min.js"></script>
 	<script>
+		var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+		var toastList = toastElList.map(function (toastEl) {
+		  return new bootstrap.Toast(toastEl, {delay: 10000})
+		});
+		if(toastList[0]) toastList[0].show();
 		$(document).ready(function() {
 			changeBetDateSelection();
 		});

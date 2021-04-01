@@ -25,8 +25,7 @@ class AdditionalBetsModel extends Model
     public function fetch_participated_battles($user_id)
     {
         $builder = $this->db->table('additional_bets');
-        $query = $builder->select('media.name, additional_bets.bet_amount, 
-                        (CASE WHEN bet_battle.player1_id = additional_bets.rooting_for_user THEN bet_battle.player1_battle_description ELSE bet_battle.player2_battle_description END) AS battle_description, rooting_user.username, bet_battle.battle_end_date, bet_battle.battle_status, additional_bets.created_datetime')
+        $query = $builder->select('media.name, additional_bets.bet_amount, bet_battle.battle_description, bet_battle.player_for, bet_battle.player_against, rooting_user.username, bet_battle.battle_end_date, bet_battle.battle_status, additional_bets.created_datetime')
                         ->join('bet_battle', 'bet_battle.battle_id = additional_bets.bet_battle_id')
                         ->join('media','media.id = bet_battle.media_selected_id')
                         ->join('user as rooting_user', 'rooting_user.id = additional_bets.rooting_for_user')

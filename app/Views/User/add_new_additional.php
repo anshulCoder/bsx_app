@@ -7,6 +7,26 @@
 		<?= $header; ?>
 
 		<main class="container">
+			<?php
+		  	$session = \Config\Services::session();
+		  	$wallet_error = $session->getFlashData('wallet_error');
+		  	if(isset($wallet_error))
+		  	{
+		  		?>
+		  		<div class="toast-container position-absolute p-3 top-0 start-50 translate-middle-x" id="toastPlacement">
+				    <div class="toast">
+				      <div class="toast-header">
+				        <strong class="me-auto">Error!</strong>
+				        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				      </div>
+				      <div class="toast-body">
+				        <?= $wallet_error; ?>
+				      </div>
+				    </div>
+				</div>
+		  		<?php
+		  	}
+		  ?>
 		  <?php $validation = \Config\Services::validation();?>
 		  <?= $validation->listErrors() ?>
 		  <div class="py-5 px-3">
@@ -26,7 +46,6 @@
 			    	<option value="<?= $battle_info['player2_id']?>" data-player="2"><?= $battle_info['player2_name']; ?></option>
 			    </select>
 			  </div>
-			  <?php $session = \Config\Services::session(); ?>
 			  <input type="hidden" name="user_id" value="<?= $session->get('user_id'); ?>"/>
 			  <button type="submit" class="btn btn-primary">Submit</button>
 			</form>
@@ -35,6 +54,11 @@
 		</main><!-- /.container -->
 	</body>
 	<script>
+		var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+		var toastList = toastElList.map(function (toastEl) {
+		  return new bootstrap.Toast(toastEl, {delay: 10000})
+		});
+		if(toastList[0]) toastList[0].show();
 		$(document).on('change', '#rooting_for_user', function() {
 			let player = $(this).find('option:selected').attr('data-player');
 			console.log(player);
