@@ -9,15 +9,6 @@
           <a class="linx nav-link" href="#">Bet Battle</a>
           <a class="linx nav-link" href="../Exchange Bet/index.html">Bet Exchange</a>
           <a class="linx nav-link" href="../Bet Arena/index.html">Bet Arena</a>
-          <?php
-          	if(!empty($session->get('user_id')))
-          	{
-          		?>
-          		<a class="linx nav-link" href="../User Page/Self/index.html">Profile</a>
-          		<a class="linx nav-link" href="/login/logout">Logout</a>
-          		<?php
-          	}
-          ?>
           <a class="linx nav-link" href="#">About Us</a>
         </div>
         <div class="navbar-nav">
@@ -26,7 +17,16 @@
           	if(!empty($session->get('user_id')))
           	{
           		?>
-          		<span class="text-white m-auto">Welcome <?= $session->get('user_name'); ?>, W: <?= $session->get('user_wallet_balance');?> <br> P: <?= $session->get('user_total_points'); ?></span>
+          			<li class="nav-item dropdown" style="align-self: center">
+	          			<a class="nav-link dropdown-toggle" style="font-size: 20px;" href="#" id="userPanel" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+			            <i class="bi bi-person"></i> <?= ucfirst($session->get('user_name')) ?>
+			          	</a>
+			        	<ul class="dropdown-menu" aria-labelledby="userPanel">
+				            <li><a class="dropdown-item">W: <?= $session->get('user_wallet_balance');?> <br> P: <?= $session->get('user_total_points'); ?></a></li>
+				            <li><a class="dropdown-item" href="../User Page/Self/index.html">Profile</a></li>
+				            <li><a class="dropdown-item" href="/login/logout">Logout</a></li>
+			        	</ul>
+			        </li>
           		<?php
           	}
           	else

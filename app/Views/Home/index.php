@@ -43,7 +43,7 @@
 </head>
 <body>
     <?= $header ?>
-
+    <?php $session = \Config\Services::session(); ?>
 <div style="background-image: linear-gradient(to bottom, #198754, black); color: white;">
 
     <div class="container-fluid" id="ranksDiv">
@@ -111,7 +111,7 @@
                                             <?php
                                                 $media_imgs = json_decode($row['media_images'], TRUE);
                                             ?>                             
-                                            <img id="imgC1" src="<?= $media_imgs[0]; ?>" style="border-radius: 50%; width: 150px;">
+                                            <img id="imgC1" src="<?= $media_imgs[0]; ?>" style="border-radius: 50%; width: 150px;height: 150px">
                                         </div>
                                         <div class="col-7">
                                             <h4 style="margin-top: 23px; margin-bottom: 20px;">Here is a prediction made - <?= $row['battle_description']; ?></h4>
@@ -146,12 +146,30 @@
                                         </div>
                                     </div> -->
                                     <div class="row hidden" style="font-size: 20px; font-family: 'RocknRoll One', sans-serif; padding: 0 15px 10px 15px;">
-                                        <div class="col-6" style="text-align: start; padding: 0;">
-                                            <div id="joinFor" class="btn btn-sm btn-dark" style="width: 90%;" data-battle-id="<?= $row['battle_id']; ?>">JOIN "FOR" Rs<?= $row['additional_bet_amount']; ?></div>
-                                        </div>
-                                        <div class="col-6" style="text-align: right; padding: 0;">
-                                          <div id="joinAgainst" class="btn btn-sm btn-dark" style="width: 90%;" data-battle-id="<?= $row['battle_id']; ?>">JOIN "AGAINST" Rs<?= $row['additional_bet_amount']; ?></div>
-                                        </div>
+                                        <?php
+                                            if(empty($session->get("user_id")))
+                                            {
+                                                ?>
+                                                <div class="col-6" style="text-align: start; padding: 0;">
+                                                    <a class="btn btn-sm btn-dark" style="width: 90%;" href="/login">JOIN "FOR" <i class="fa fa-rupee-sign"></i><?= $row['additional_bet_amount']; ?></a>
+                                                </div>
+                                                <div class="col-6" style="text-align: right; padding: 0;">
+                                                  <a class="btn btn-sm btn-dark" style="width: 90%;" href="/login">JOIN "AGAINST" <i class="fa fa-rupee-sign"></i><?= $row['additional_bet_amount']; ?></a>
+                                                </div>
+                                                <?php
+                                            }
+                                            else
+                                            {
+                                                ?>
+                                                <div class="col-6" style="text-align: start; padding: 0;">
+                                                    <div class="btn btn-sm btn-dark joinBattle" style="width: 90%;" data-battle-id="<?= $row['battle_id']; ?>" data-user-id="<?= ($row['player_for'] == 1 ? $row['player1_id'] : $row['player2_id']) ?>" data-amt="<?= $row['additional_bet_amount']; ?>">JOIN "FOR" <i class="fa fa-rupee-sign"></i><?= $row['additional_bet_amount']; ?></div>
+                                                </div>
+                                                <div class="col-6" style="text-align: right; padding: 0;">
+                                                  <div class="btn btn-sm btn-dark joinBattle" style="width: 90%;" data-battle-id="<?= $row['battle_id']; ?>" data-user-id="<?= ($row['player_against'] == 1 ? $row['player1_id'] : $row['player2_id']) ?>" data-amt="<?= $row['additional_bet_amount']; ?>">JOIN "AGAINST" <i class="fa fa-rupee-sign"></i><?= $row['additional_bet_amount']; ?></div>
+                                                </div>
+                                                <?php
+                                            }
+                                        ?>
                                     </div>
                                     <!-- <div class="row hidden" style="width: 100%; margin: 0; margin-top: 10px;">
                                         <div class="col-12 btn btn-lg btn-success" style="text-align: center;">
@@ -213,16 +231,16 @@
                             $media_count++;
                             ?>
                             <div class="col-auto example fullBar">
-                                <div class="row enlarge" id="upperBar" style="height: 20%; background-image: url(<?= $imgs[0]; ?>); background-size: 100%; border-radius: 2%; font-size: x-small; ">
+                                <div class="row enlarge upperBar" data-release-date="<?= $row['release_date']; ?>" style="height: 20%; background-image: url(<?= $imgs[0]; ?>); background-size: 100%; border-radius: 2%; font-size: x-small; ">
                                   <span style="vertical-align: baseline;">
                                     <div class="dropdown">
-                                      <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                      <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton<?= $row['id'] ?>" data-bs-toggle="dropdown" aria-expanded="false">
                                         BET
                                       </button>
-                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a href="../Synopsis2/index2.html" onclick="btnFunction()" class="dropdown-item btn">Bet Sequel</a></li>
-                                        <li><a href="../Synopsis2/index.html" onclick="btnFunction()" class="dropdown-item btn">Bet Accuracy</a></li>
-                                        <li><a href="../Synopsis2/index3.html" onclick="btnFunction()" class="dropdown-item btn">Bet Battle</a></li>
+                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<?= $row['id'] ?>">
+                                        <li><a href="/home/create_sequel_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Sequel</a></li>
+                                        <li><a href="/home/create_accuracy_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Accuracy</a></li>
+                                        <li><a href="/home/create_battle_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Battle</a></li>
                                       </ul>
                                     </div>
                                   </span>
@@ -234,21 +252,21 @@
                             $media_count--;
                             ?>
                                 <div style="height: 7px;"></div>
-                                <div class="row enlarge" id="lowerBar" style="height: 80%;background-image: url(<?= $imgs[0];?>); background-size: 100%; border-radius: 2%; font-size: x-small;">
+                                <div class="row enlarge lowerBar" data-release-date="<?= $row['release_date']; ?>" style="height: 80%;background-image: url(<?= $imgs[0];?>); background-size: 100%; border-radius: 2%; font-size: x-small;">
                                   <span style="vertical-align: baseline;">
                                     <div class="dropdown">
-                                      <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                      <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton<?= $row['id'] ?>" data-bs-toggle="dropdown" aria-expanded="false">
                                         BET
                                       </button>
-                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a href="../Synopsis2/index2.html" onclick="btnFunction()" class="dropdown-item btn">Bet Sequel</a></li>
-                                        <li><a href="../Synopsis2/index.html" onclick="btnFunction()" class="dropdown-item btn">Bet Accuracy</a></li>
-                                        <li><a href="../Synopsis2/index3.html" onclick="btnFunction()" class="dropdown-item btn">Bet Battle</a></li>
+                                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<?= $row['id'] ?>">
+                                        <li><a href="/home/create_sequel_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Sequel</a></li>
+                                        <li><a href="/home/create_accuracy_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Accuracy</a></li>
+                                        <li><a href="/home/create_battle_bet/<?= $row['id'] ?>" class="dropdown-item btn">Bet Battle</a></li>
                                       </ul>
                                     </div>
                                   </span>
                                 </div>
-                              </div>
+                            </div>
                             <?php
                         }
                     }

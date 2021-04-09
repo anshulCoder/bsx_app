@@ -17,7 +17,7 @@ class TmdbController extends BaseController
 			$page = 1;
 			while (true) 
 			{
-				$movies = $tm->getNowPlayingMovies($page, 'en-IN');
+				$movies = $tm->getUpcomingMovies($page, 'en-IN');
 				echo '<br>Found '.count($movies['results']).' movies, page: '.$page;
 				
 				if(!empty($movies['results']) && count($movies['results'])>0)

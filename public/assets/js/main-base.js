@@ -7,47 +7,6 @@ var x = 0;
 var xperc = "";
 var full = false;
 
-// function btnFunction () {
-//     alert("THIS WILL TAKE YOU TO THE SYNOPSIS PAGE BASED ON THE BET_TYPE SELECTED! ");
-// }
-
-function addOne () {
-    document.querySelector('#barContainer').insertAdjacentHTML(
-        'afterbegin',
-        `<div class="col-auto example fullBar">
-        <div class="row enlarge" id="upperBar" style="height: 0%; background-image: url(https://occ-0-1723-1722.1.nflxso.net/dnm/api/v6/XsrytRUxks8BtTRf9HNlZkW2tvY/AAAABemUFIQksgwOxG1UZfxZ2rcOpAo_cGc3h8CkWvoe7Ia360WnEKLIPP5VjJ5cobOxwF6tSJ7ieFBzQA7VYSPTrtjnbBxCsf0WJ06KrrYo-r8DJHp_XBkrKatPnV3azQAygyoIR_35C9P6TE0uuMXvon9xTdxa4lU.jpg); background-size: 100%; border-radius: 2%; font-size: x-small; ">
-          <span style="vertical-align: baseline;">
-            <div class="dropdown">
-              <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                BET
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a href="../Synopsis2/index2.html" onclick="btnFunction()" class="dropdown-item btn">Bet Sequel</a></li>
-                <li><a href="../Synopsis2/index.html" onclick="btnFunction()" class="dropdown-item btn">Bet Accuracy</a></li>
-                <li><a href="../Synopsis2/index3.html" onclick="btnFunction()" class="dropdown-item btn">Bet Battle</a></li>
-              </ul>
-            </div>
-          </span>
-        </div>
-        <div style="height: 4px;"></div>
-        <div class="row enlarge" id="lowerBar" style="height: 100%;background-image: url(https://images-na.ssl-images-amazon.com/images/I/51RwLbQwRyL._SL1200_.jpg); background-size: 100%; border-radius: 2%; font-size: x-small;">
-          <span style="vertical-align: baseline;">
-            <div class="dropdown">
-              <button class="btn btn-success btn-sm dropdown-toggle" style="width: 100%; text-align: center; font-size: xx-small; font-weight: bold;" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                BET
-              </button>
-              <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a href="../Synopsis2/index2.html" onclick="btnFunction()" class="dropdown-item btn">Bet Sequel</a></li>
-                <li><a href="../Synopsis2/index.html" onclick="btnFunction()" class="dropdown-item btn">Bet Accuracy</a></li>
-                <li><a href="../Synopsis2/index3.html" onclick="btnFunction()" class="dropdown-item btn">Bet Battle</a></li>
-              </ul>
-            </div>
-          </span>
-        </div>
-      </div>`      
-      )
-}
-
 
 document.querySelector("#ranksDiv").addEventListener("mouseenter", function(){
     document.querySelector("#ranks").style.fontSize = "40px";
@@ -79,24 +38,6 @@ document.querySelector("#publicDiv").addEventListener("mouseleave", function(){
   document.querySelector("#publicBets").style.marginTop = "5px";
 })
 
-// $(document).on('click', '#collapseLinks', function(e) {
-//   $('.linx').toggle();
-//   $('#mainLink').toggle();
-// });
-
-// document.querySelector("#collapseLinks").addEventListener("click", function(){
-//   if(document.querySelector(".linx").style.opacity != '0') {
-//     for (let index = 0; index < document.querySelectorAll(".linx").length; index++) {
-//       document.querySelectorAll(".linx")[index].style.opacity = '0';
-//     }
-//   }
-//   else {
-//     for (let index = 0; index < document.querySelectorAll(".linx").length; index++) {
-//       document.querySelectorAll(".linx")[index].style.opacity = '1';
-//     }
-//     document.querySelector("#mainLink").style.opacity = '0';
-//   }
-// })
 
 document.querySelector("#betBack").addEventListener("click", function(){
   document.querySelector("#img1").setAttribute("src", "https://i.icanvas.com/list-square/japanese-movie-posters-2.jpg");
@@ -115,3 +56,66 @@ document.querySelector("#betForward").addEventListener("click", function(){
 })
 
 
+$(document).on('click', '.joinBattle', function(e) {
+  var battle_id = $(this).attr('data-battle-id');
+  var rooting_for_user = $(this).attr('data-user-id');
+  var battle_amt = $(this).attr('data-amt');
+
+  if(confirm("Confirm participation?"))
+  {
+    $('.loader').removeClass('d-none');
+    $.ajax({
+      type: "POST",
+      dataType: 'json',
+      url: '/user/save_additional_bet/json',
+      data: {bet_battle_id: battle_id, rooting_for_user: rooting_for_user,
+        bet_amount: battle_amt},
+      success: function(data) {
+        $('.loader').addClass('d-none');
+        if(data.status) 
+        {
+          alert("Successfully participated in battle!");
+          window.location.reload();
+        }
+        else
+        {
+          alert(data.error);
+        }
+      },
+      error: function(err) {
+        $('.loader').addClass('d-none');
+        alert("Some Error Occured!");
+      }
+    });
+  }
+});
+
+var movieTimer;
+$(document).ready(function() {
+  movieTimer = setInterval(function() {
+    $('.upperBar').each(function(index, u) {
+      var release_date = new Date($(u).attr('data-release-date'));
+      var now_date = new Date();
+      var increase_height = (100/(release_date.getTime() - now_date.getTime()));
+      var old_height = Number(u.getBoundingClientRect()['height']);
+      var new_height = Math.round((old_height+Number(increase_height)) * 100) / 100;
+      u.style.height = new_height+'px';
+      //$(u).height(new_height+"px");
+      console.log(old_height, $(u).height(), new_height);
+      // $(u).height(function(index, currentHeight) {
+      //   return currentHeight + increase_height;
+      // });
+    });
+    $('.lowerBar').each(function(index, u) {
+      var release_date = new Date($(u).attr('data-release-date'));
+      var now_date = new Date();
+      var decrease_height = (100/(release_date.getTime() - now_date.getTime()));
+      var old_height = $(u).height();
+      $(u).height(old_height-decrease_height);
+
+      // $(u).height(function(index, currentHeight) {
+      //   return currentHeight - decrease_height;
+      // });
+    });
+  }, 10000);
+});

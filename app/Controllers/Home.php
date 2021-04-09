@@ -13,7 +13,12 @@ class Home extends BaseController
 		$betBattleModel = model('App\Models\BetBattleModel', false);
 		$data['header'] = view('common/HeaderNew');
 		$data['public_battles'] = $betBattleModel->get_public_battles();
-		$data['medias'] = $mediaModel->where('active', 1)->findAll(20, 1);
+		$data['medias'] = $mediaModel
+							->where('active', 1)
+							->where("JSON_LENGTH(media_images) IS NOT NULL")
+							->where("JSON_LENGTH(media_images)>0")
+							->orderBy("id", "DESC")
+							->findAll(20, 1);
 		echo view('common/commoncss');
 		echo view('common/commonjs');
 		echo view('Home/index', $data);

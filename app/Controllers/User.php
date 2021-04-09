@@ -522,30 +522,73 @@ class User extends BaseController
 		echo view('User/add_new_additional', $data);
 	}
 
-	public function save_additional_bet()
+	public function save_additional_bet($reqType = 'redirect')
 	{
 		$rooting_for_user = $this->request->getVar('rooting_for_user');
 
 		if(empty($rooting_for_user))
 		{
-			return redirect()->back();
+			if($reqType == 'json')
+			{
+				return json_encode(array(
+					'status' => false,
+					'error' => 'Data is missing!'
+				));
+			}
+			else
+			{
+				return redirect()->back();
+			}
 		}
 		else
 		{
 			$additionalBetsModel = model('App\Models\AdditionalBetsModel', false);
 			$userModel = model('App\Models\UserModel', false);
 			$walletLogMasterModel = model('App\Models\WalletLogMasterModel', false);
-			$user_id = $this->request->getVar('user_id');
+			$user_id = $this->session->get('user_id');
 			$user_data = $userModel->where('id', $user_id)->first();
 			$bet_amount = $this->request->getVar('bet_amount');
 
 			$updated_wallet_balance = $user_data['wallet_balance'] - (double)$bet_amount;
 
+			// Check if already participated
+			$alreadyExists = $additionalBetsModel
+								->where('bet_battle_id', $this->request->getVar('bet_battle_id'))
+								->where('user_id', $user_id)
+								->where('rooting_for_user', $rooting_for_user)->first();
+
+			if(!empty($alreadyExists['additional_id']))
+			{
+				if($reqType == 'json')
+				{
+					return json_encode(array(
+						'status' => false,
+						'error' => 'Already participated in battle!'
+					));
+				}
+				else
+				{
+					$this->session->setFlashdata('participation_error', 'Already participated in battle!');
+					return redirect()->to('/user/participate-public-battle/'.$this->request->getVar('bet_battle_id'));
+				}
+			}
+
 			if($updated_wallet_balance < 0)
 			{
-				$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
-				return redirect()->to('/user/participate-public-battle/'.$this->request->getVar('bet_battle_id'));
+				if($reqType == 'json')
+				{
+					return json_encode(array(
+						'status' => false,
+						'error' => 'Insufficient balance to place bet!'
+					));
+				}
+				else
+				{
+					$this->session->setFlashdata('wallet_error', 'Insufficient balance to place bet!');
+					return redirect()->to('/user/participate-public-battle/'.$this->request->getVar('bet_battle_id'));
+				}
 			}
+
 
 			$add_data = array(
 				'bet_battle_id' => $this->request->getVar('bet_battle_id'),
@@ -564,7 +607,16 @@ class User extends BaseController
 				'amount_action' => 1,
 				'user_id' => $user_id
 			));
-			return redirect()->to('/user');
+			if($reqType == 'json')
+			{
+				return json_encode(array(
+					'status' => true
+				));
+			}
+			else
+			{
+				return redirect()->to('/user');
+			}
 		}
 	}
 
